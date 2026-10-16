@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="assets/wordmark.png" alt="USB Doctor — Diagnose · Repair · Recover" width="880">
+<img src="assets/wordmark.png" alt="FlashPhysician — Diagnose · Repair · Recover" width="880">
 
 **Rescue tool for USB flash drives, SD cards and memory cards.**
 
@@ -25,11 +25,11 @@ simply **gone**. Every one of those has a different cause, a different fix and a
 different chance of getting your data back — and the tools that could tell them
 apart are scattered across a dozen half-maintained projects.
 
-USB Doctor reads the actual bytes on the medium — the MBR, the GPT, the FAT
+FlashPhysician reads the actual bytes on the medium — the MBR, the GPT, the FAT
 tables, the exFAT boot region, the `$MFT` — and tells you *which* of these
 things happened:
 
-| What you see | What is usually wrong | What USB Doctor does |
+| What you see | What is usually wrong | What FlashPhysician does |
 |---|---|---|
 | **"Disk is not formatted. Do you want to format it?"** | Partition table lost or boot signature gone. The data is still there. | Rebuilds the table from the filesystem it finds on the drive |
 | **Drive shows as RAW** | FAT label contradicts the real geometry, or exFAT checksum broken | Corrects the boot sector, rebuilds the exFAT boot region |
@@ -48,7 +48,7 @@ read.
 ### Windows — portable, nothing to install
 
 Download `USBDoctor-portable.exe` from
-[Releases](https://github.com/Rasfooo/usbdoctor/releases) and run it. No Python,
+[Releases](https://github.com/Rasfooo/flashphysician/releases) and run it. No Python,
 no runtime, no installer. It is a single file you can keep on the very drive
 you are rescuing.
 
@@ -59,14 +59,14 @@ you are rescuing.
 ### Linux
 
 ```bash
-git clone https://github.com/Rasfooo/usbdoctor
-cd usbdoctor
-python3 -m usbdoctor diagnose /dev/sdb
+git clone https://github.com/Rasfooo/flashphysician
+cd flashphysician
+python3 -m flashphysician diagnose /dev/sdb
 ```
 
 No installation step — the package has **zero dependencies**. Tkinter ships with
 Python, and every OS-level helper (`chkdsk`, `fsck.fat`, `diskpart`, `ntfsfix`)
-is invoked as a subprocess; if one is missing, USB Doctor says so instead of
+is invoked as a subprocess; if one is missing, FlashPhysician says so instead of
 failing.
 
 Optional helpers, if you want the corresponding features:
@@ -78,16 +78,16 @@ sudo apt install dosfstools exfatprogs ntfs-3g   # FAT / exFAT / NTFS repair
 ### Python package
 
 ```bash
-pip install git+https://github.com/Rasfooo/usbdoctor
-usbdoctor --help
-usbdoctor-gui
+pip install git+https://github.com/Rasfooo/flashphysician
+flashphysician --help
+flashphysician-gui
 ```
 
 ---
 
 ## What it looks like
 
-<img src="assets/terminal.png" alt="usbdoctor diagnose output" width="900">
+<img src="assets/terminal.png" alt="flashphysician diagnose output" width="900">
 
 Real output from a drive whose partition table was wiped — the single most
 common state for a flash drive that was unplugged mid-write. Notice it does not
@@ -98,23 +98,23 @@ say "unrecoverable": it found the filesystem elsewhere on the medium and says so
 ## Commands
 
 ```
-usbdoctor list                    # show removable drives
-usbdoctor info                    # what this system can do
-usbdoctor diagnose <device>       # read-only health report
-usbdoctor scan <device>           # surface test: find bad sectors
-usbdoctor capacity <device>       # detect fake / overreported flash
-usbdoctor repair <device>         # rebuild partition table / boot sector
-usbdoctor fix <device>            # run the OS filesystem checker
-usbdoctor recover <device> --to DIR   # recover files
-usbdoctor image <device> --to FILE    # copy the drive, tolerating bad sectors
-usbdoctor eject <device>          # flush and safely remove
+flashphysician list                    # show removable drives
+flashphysician info                    # what this system can do
+flashphysician diagnose <device>       # read-only health report
+flashphysician scan <device>           # surface test: find bad sectors
+flashphysician capacity <device>       # detect fake / overreported flash
+flashphysician repair <device>         # rebuild partition table / boot sector
+flashphysician fix <device>            # run the OS filesystem checker
+flashphysician recover <device> --to DIR   # recover files
+flashphysician image <device> --to FILE    # copy the drive, tolerating bad sectors
+flashphysician eject <device>          # flush and safely remove
 ```
 
 Every destructive command is safe by default. `repair`, `scan` and `capacity`
 print exactly what they would write and stop, unless you pass `--yes`:
 
 ```bash
-$ usbdoctor repair /dev/sdb
+$ flashphysician repair /dev/sdb
   [2] rebuild partition table pointing at the filesystem at 1.0 MB
       - rebuild MBR: FAT32 partition @ LBA 2048 (30253056 sectors)
       note: volume label preserved: 'BACKUP'
@@ -149,7 +149,7 @@ defaults are chosen accordingly.
   drive that is already dying.
 - **Repairs are planned before they are applied.** A repair is a list of
   concrete byte writes with offsets, shown to you first. `--yes` is required.
-- **Every overwritten sector is backed up** to `~/.usbdoctor/backups/` before
+- **Every overwritten sector is backed up** to `~/.flashphysician/backups/` before
   the write, so a repair is undoable.
 - **`--dry-run` is the default.** `plan.apply(dry_run=True)` produces the
   identical plan and touches nothing.
@@ -213,7 +213,7 @@ Four lines of defence, in the order they are tried:
 2. **Deleted entries** — FAT marks a deleted file by overwriting the first
    character of its name with `0xE5`. The clusters are usually still intact and
    contiguous, so the content comes back; the first letter of the name cannot,
-   and USB Doctor says so rather than inventing one.
+   and FlashPhysician says so rather than inventing one.
 3. **Hidden files** — an attribute byte, not a missing file.
 4. **Signature carving** — when there is no filesystem left at all, scan for
    known file headers (JPEG, PNG, GIF, PDF, ZIP, RTF, MP3, WAV, MKV, OGG,
@@ -222,8 +222,8 @@ Four lines of defence, in the order they are tried:
    report states this instead of quietly producing broken files.
 
 ```bash
-usbdoctor recover /dev/sdb --to ~/rescued            # easy cases
-usbdoctor recover /dev/sdb --to ~/rescued --carve    # when nothing is left
+flashphysician recover /dev/sdb --to ~/rescued            # easy cases
+flashphysician recover /dev/sdb --to ~/rescued --carve    # when nothing is left
 ```
 
 ---
@@ -233,7 +233,7 @@ usbdoctor recover /dev/sdb --to ~/rescued --carve    # when nothing is left
 Read it once, then stop touching it:
 
 ```bash
-usbdoctor image /dev/sdb --to ~/sdb.img
+flashphysician image /dev/sdb --to ~/sdb.img
 ```
 
 Unreadable blocks are recorded and zero-filled so the copy can continue, and the
@@ -253,11 +253,11 @@ artefact is a genuine Windows build rather than a cross-compiled guess:
 pip install pyinstaller
 python tools\make_logo.py
 python tools\make_ico.py
-pyinstaller tools\usbdoctor.spec --noconfirm
+pyinstaller tools\flashphysician.spec --noconfirm
 ```
 
 Output: `dist/USBDoctor/` (windowed), `dist/USBDoctor-portable.exe` (single
-file), `dist/usbdoctor-cli/` (console build for scripting).
+file), `dist/flashphysician-cli/` (console build for scripting).
 
 ---
 
@@ -305,7 +305,7 @@ Honest limits, so you know what to verify yourself:
 ## Project layout
 
 ```
-usbdoctor/
+flashphysician/
   core/
     structures.py   on-disk formats: MBR, GPT, FAT, exFAT, NTFS, ext
     imaging.py      device/image source, discovery, tolerant copying
@@ -328,7 +328,7 @@ tools/              logo generator, .ico builder, PyInstaller spec
 
 ## Credits
 
-USB Doctor exists because a lot of good work already did. It stands on:
+FlashPhysician exists because a lot of good work already did. It stands on:
 
 - **[AltraMayor/f3](https://github.com/AltraMayor/f3)** — the standard method for
   detecting fraudulent flash. The capacity test here follows its principle:

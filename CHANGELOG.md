@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to USB Doctor are recorded here. The format follows
+All notable changes to FlashPhysician are recorded here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follow
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
@@ -27,7 +27,7 @@ First release.
 **Repair (planned before it writes)**
 - Every repair is a `RepairPlan`: concrete byte writes with offsets,
   printed before anything happens, applied only with `--yes`.
-- Sectors are backed up to `~/.usbdoctor/backups/` before being written.
+- Sectors are backed up to `~/.flashphysician/backups/` before being written.
 - MBR signature restore, MBR rebuild from an orphaned filesystem, GPT rebuild
   from its backup, FAT32 boot-sector restore from its own backup, FAT
   type-label correction, dirty-flag clear.
@@ -71,9 +71,9 @@ First release.
   report / advice / detail tabs, and guarded destructive actions.
 
 **Packaging and assets**
-- `pyproject.toml` with `usbdoctor` and `usbdoctor-gui` entry points,
+- `pyproject.toml` with `flashphysician` and `flashphysician-gui` entry points,
   `dependencies = []`.
-- `tools/usbdoctor.spec` for PyInstaller: windowed, one-file portable and
+- `tools/flashphysician.spec` for PyInstaller: windowed, one-file portable and
   console builds.
 - Logo, wordmark, terminal card, PNG and multi-resolution ICO generators
   driven from SVG source with headless Chrome.
@@ -84,4 +84,4 @@ First release.
 - Fixtures written byte-for-byte in Python so each corruption is encoded
   exactly, including states that are awkward to produce on real hardware.
 
-[1.0.0]: https://github.com/Rasfooo/usbdoctor/releases/tag/v1.0.0
+[1.0.0]: https://github.com/Rasfooo/flashphysician/releases/tag/v1.0.0

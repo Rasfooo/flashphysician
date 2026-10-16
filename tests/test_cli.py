@@ -36,7 +36,7 @@ def check(name: str, ok: bool, why: str = "") -> None:
 def cli(*argv: str, timeout: int = 300) -> tuple[int, str, str]:
     env = dict(os.environ)
     env["PYTHONPATH"] = ROOT
-    proc = subprocess.run([sys.executable, "-m", "usbdoctor", *argv],
+    proc = subprocess.run([sys.executable, "-m", "flashphysician", *argv],
                           capture_output=True, text=True, timeout=timeout,
                           cwd=ROOT, env=env)
     return proc.returncode, proc.stdout, proc.stderr
@@ -49,7 +49,7 @@ def setup() -> None:
 def test_help_and_version() -> None:
     rc, out, _ = cli("--help")
     rc2, out2, _ = cli("--version")
-    check("help_and_version", rc == 0 and rc2 == 0 and "usbdoctor" in out2,
+    check("help_and_version", rc == 0 and rc2 == 0 and "flashphysician" in out2,
           f"rc={rc}/{rc2}")
 
 
@@ -158,7 +158,7 @@ def test_recover_extracts_files() -> None:
     fx.make_fat32_with_files(p, 1024, deleted=True, hidden=True)
     rc, out, _ = cli("recover", p, "--to", dest)
     got = sorted(os.listdir(dest)) if os.path.isdir(dest) else []
-    payload = b"This is the live file: USB Doctor recovery test.\n" * 40
+    payload = b"This is the live file: FlashPhysician recovery test.\n" * 40
     live_ok = any(open(os.path.join(dest, f), "rb").read() == payload for f in got)
     check("recover_extracts_files",
           rc == 0 and len(got) == 4 and live_ok,
@@ -200,7 +200,7 @@ def test_unknown_flag_fails_cleanly() -> None:
 
 def main() -> int:
     setup()
-    print("USB Doctor -- CLI contract test suite\n")
+    print("FlashPhysician -- CLI contract test suite\n")
     for fn in (test_help_and_version, test_info_lists_capabilities,
                test_diagnose_exit_codes, test_diagnose_json_is_valid,
                test_scan_requires_confirmation_and_writes_nothing,

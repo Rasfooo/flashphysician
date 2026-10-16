@@ -1,12 +1,12 @@
 # -*- mode: python ; coding: utf-8 -*-
 """PyInstaller spec: build the portable Windows .exe.
 
-    pyinstaller tools/usbdoctor.spec --noconfirm
+    pyinstaller tools/flashphysician.spec --noconfirm
 
 Produces two artefacts in dist/:
 
-    USBDoctor.exe      -- windowed GUI, double-click to run
-    usbdoctor-cli.exe  -- console build for scripting and headless use
+    FlashPhysician.exe      -- windowed GUI, double-click to run
+    flashphysician-cli.exe  -- console build for scripting and headless use
 
 Cross-building note: PyInstaller cannot produce a real Windows binary from
 Linux; it needs to run on Windows (or under Wine). That is why this file ships
@@ -31,15 +31,15 @@ for pattern in ("*.svg", "*.png", "*.txt"):
         datas.append((str(f), "assets"))
 
 hiddenimports = [
-    "usbdoctor.core.structures",
-    "usbdoctor.core.imaging",
-    "usbdoctor.core.diagnose",
-    "usbdoctor.core.repair",
-    "usbdoctor.recovery.files",
-    "usbdoctor.recovery.surface",
-    "usbdoctor.backends.base",
-    "usbdoctor.backends.linux",
-    "usbdoctor.backends.windows",
+    "flashphysician.core.structures",
+    "flashphysician.core.imaging",
+    "flashphysician.core.diagnose",
+    "flashphysician.core.repair",
+    "flashphysician.recovery.files",
+    "flashphysician.recovery.surface",
+    "flashphysician.backends.base",
+    "flashphysician.backends.linux",
+    "flashphysician.backends.windows",
     # Tkinter pieces PyInstaller occasionally misses
     "tkinter",
     "tkinter.ttk",
@@ -72,7 +72,7 @@ common = dict(
     noarchive=False,
 )
 
-a_gui = Analysis([str(ROOT / "usbdoctor" / "gui.py")], **common)
+a_gui = Analysis([str(ROOT / "flashphysician_gui_entry.py")], **common)
 pyz_gui = PYZ(a_gui.pure, a_gui.zipped_data, cipher=block_cipher)
 
 exe_gui = EXE(
@@ -80,7 +80,7 @@ exe_gui = EXE(
     a_gui.scripts,
     [],
     exclude_binaries=True,
-    name="USBDoctor",
+    name="FlashPhysician",
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
@@ -95,17 +95,6 @@ exe_gui = EXE(
     else (str(ASSETS / "icon.png") if (ASSETS / "icon.png").exists() else None),
 )
 
-coll_cli = COLLECT(
-    exe_cli,
-    a_cli.binaries,
-    a_cli.zipfiles,
-    a_cli.datas,
-    strip=False,
-    upx=True,
-    upx_exclude=[],
-    name="usbdoctor-cli",
-)
-
 coll_gui = COLLECT(
     exe_gui,
     a_gui.binaries,
@@ -114,7 +103,7 @@ coll_gui = COLLECT(
     strip=False,
     upx=True,
     upx_exclude=[],
-    name="USBDoctor",
+    name="FlashPhysician",
 )
 
 # -- one-file GUI build -----------------------------------------------------
@@ -125,7 +114,7 @@ exe_onefile = EXE(
     a_gui.zipfiles,
     a_gui.datas,
     [],
-    name="USBDoctor-portable",
+    name="FlashPhysician-portable",
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
@@ -137,19 +126,8 @@ exe_onefile = EXE(
     else (str(ASSETS / "icon.png") if (ASSETS / "icon.png").exists() else None),
 )
 
-coll_cli = COLLECT(
-    exe_cli,
-    a_cli.binaries,
-    a_cli.zipfiles,
-    a_cli.datas,
-    strip=False,
-    upx=True,
-    upx_exclude=[],
-    name="usbdoctor-cli",
-)
-
 # -- console build for scripting -------------------------------------------
-a_cli = Analysis([str(ROOT / "usbdoctor" / "cli.py")], **common)
+a_cli = Analysis([str(ROOT / "flashphysician_cli_entry.py")], **common)
 pyz_cli = PYZ(a_cli.pure, a_cli.zipped_data, cipher=block_cipher)
 
 exe_cli = EXE(
@@ -157,7 +135,7 @@ exe_cli = EXE(
     a_cli.scripts,
     [],
     exclude_binaries=True,
-    name="usbdoctor-cli",
+    name="flashphysician-cli",
     debug=False,
     strip=False,
     upx=True,
@@ -174,5 +152,5 @@ coll_cli = COLLECT(
     strip=False,
     upx=True,
     upx_exclude=[],
-    name="usbdoctor-cli",
+    name="flashphysician-cli",
 )

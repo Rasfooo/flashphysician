@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 400"
+     width="1280" height="400">
+  <defs>
+    <linearGradient id="bgg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0d1320"/>
+      <stop offset="100%" stop-color="#16202c"/>
+    </linearGradient>
+    <linearGradient id="tg" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#9ccbff"/>
+    </linearGradient>
+    <linearGradient id="pg" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#4ea1ff"/>
+      <stop offset="100%" stop-color="#3fb950"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1280" height="400" rx="22" fill="url(#bgg)"/>
+  <rect x="1" y="1" width="1278" height="398" rx="21"
+        fill="none" stroke="#4ea1ff" stroke-opacity="0.22" stroke-width="2"/>
+
+  <!-- icon: shield at ~44% of banner height, contents kept well inside it -->
+  <path d="M 61.4 38.0 L 202.6 38.0 Q 230.0 38.0 230.0 65.4 L 230.0 118.4 C 230.0 198.8 171.2 279.2 132.0 306.0 C 92.8 279.2 34.0 198.8 34.0 118.4 L 34.0 65.4 Q 34.0 38.0 61.4 38.0 Z"
+        fill="#16202c" stroke="url(#accent)" stroke-width="7"
+        stroke-linejoin="round"/>
+  <rect x="126.6" y="154.1" width="10.7" height="10.1" rx="2.3" fill="#0d141c" stroke="#4ea1ff" stroke-width="1.7"/><rect x="106.9" y="121.9" width="50.2" height="32.2" rx="3.4" fill="#0d141c" stroke="#4ea1ff" stroke-width="2.3"/><rect x="111.9" y="128.4" width="8.5" height="5.1" rx="1.0" fill="#4ea1ff" fill-opacity="0.90"/><rect x="122.5" y="128.4" width="8.5" height="5.1" rx="1.0" fill="#4ea1ff" fill-opacity="0.77"/><rect x="133.0" y="128.4" width="8.5" height="5.1" rx="1.0" fill="#4ea1ff" fill-opacity="0.64"/><rect x="143.6" y="128.4" width="8.5" height="5.1" rx="1.0" fill="#4ea1ff" fill-opacity="0.51"/>
+  <path d="M 66.0 202.0 L 95.0 202.0 L 105.6 196.8 L 117.5 210.2 L 130.7 187.0 L 143.9 202.0 L 166.3 202.0 L 198.0 202.0"
+        fill="none" stroke="url(#pg)" stroke-width="8"
+        stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="182" cy="98" r="9" fill="#3fb950"/>
+
+  <text x="282" y="150" font-family="Segoe UI, SF Pro Display, Helvetica Neue, Arial, system-ui, sans-serif" font-size="78" font-weight="700"
+        fill="url(#tg)" letter-spacing="-1.5">FlashPhysician</text>
+  <text x="286" y="204" font-family="Segoe UI, SF Pro Display, Helvetica Neue, Arial, system-ui, sans-serif" font-size="30" font-weight="400"
+        fill="#4ea1ff" letter-spacing="0.4">Diagnose &#183; Repair &#183; Recover</text>
+  <text x="286" y="248" font-family="Segoe UI, SF Pro Display, Helvetica Neue, Arial, system-ui, sans-serif" font-size="22" font-weight="400"
+        fill="#8b98a5">Rescue tool for USB flash drives, SD cards and memory cards</text>
+
+  <g transform="translate(286, 282)">
+    <rect x="0.0" y="0" width="186.3" height="30" rx="15.0" fill="#3fb950" fill-opacity="0.14" stroke="#3fb950" stroke-opacity="0.45"/><text x="93.2" y="20.5" font-family="Segoe UI, SF Pro Display, Helvetica Neue, Arial, system-ui, sans-serif" font-size="16" font-weight="600" fill="#3fb950" text-anchor="middle">No install needed</text><rect x="198.3" y="0" width="168.4" height="30" rx="15.0" fill="#4ea1ff" fill-opacity="0.14" stroke="#4ea1ff" stroke-opacity="0.45"/><text x="282.5" y="20.5" font-family="Segoe UI, SF Pro Display, Helvetica Neue, Arial, system-ui, sans-serif" font-size="16" font-weight="600" fill="#4ea1ff" text-anchor="middle">Read-only first</text><rect x="378.7" y="0" width="222.2" height="30" rx="15.0" fill="#d29922" fill-opacity="0.13" stroke="#d29922" stroke-opacity="0.4"/><text x="489.8" y="20.5" font-family="Segoe UI, SF Pro Display, Helvetica Neue, Arial, system-ui, sans-serif" font-size="16" font-weight="600" fill="#d29922" text-anchor="middle">Backups before writes</text>
+  </g>
+</svg>

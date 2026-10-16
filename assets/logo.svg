@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"
      width="512" height="512" role="img"
-     aria-label="USB Doctor: diagnose, repair and recover removable storage">
-  <title>USB Doctor</title>
+     aria-label="FlashPhysician: diagnose, repair and recover removable storage">
+  <title>FlashPhysician</title>
   <desc>A shield containing a USB plug with an ECG heartbeat trace, and a
   green status dot.</desc>
 

@@ -1,4 +1,4 @@
-"""`python -m usbdoctor` entry point."""
+"""`python -m flashphysician` entry point."""
 
 import sys
 

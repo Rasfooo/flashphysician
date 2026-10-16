@@ -17,7 +17,7 @@ ROOT = os.path.dirname(HERE)
 sys.path.insert(0, ROOT)
 
 from tests import fixtures as fx                                     # noqa: E402
-from usbdoctor.recovery.surface import (                             # noqa: E402
+from flashphysician.recovery.surface import (                             # noqa: E402
     capacity_test, make_pattern, surface_test,
 )
 
@@ -89,7 +89,7 @@ def wrap(path: str, real_mb: int, fake_mb: int) -> None:
 
 def install_fake_flash(real_bytes: int):
     """Patch Source.open so every handle aliases past `real_bytes`."""
-    from usbdoctor.core import imaging as imgmod
+    from flashphysician.core import imaging as imgmod
     real_open = open
 
     def patched_open(self):
@@ -142,8 +142,8 @@ def test_dead_sector_detected() -> None:
         def close(self):
             return self.fh.close()
 
-    import usbdoctor.recovery.surface as surf
-    from usbdoctor.core import imaging as imgmod
+    import flashphysician.recovery.surface as surf
+    from flashphysician.core import imaging as imgmod
     bad_off = 1 * 1024 * 1024
     orig_init = imgmod.Source.__init__
 
@@ -241,21 +241,21 @@ _ORIG_OPEN = None
 
 
 def restore_source() -> None:
-    from usbdoctor.core import imaging as imgmod
+    from flashphysician.core import imaging as imgmod
     if _ORIG_OPEN is not None:
         imgmod.Source.open = _ORIG_OPEN
 
 
 def _capture_original():
     global _ORIG_OPEN
-    from usbdoctor.core import imaging as imgmod
+    from flashphysician.core import imaging as imgmod
     _ORIG_OPEN = imgmod.Source.open
 
 
 def main() -> int:
     os.makedirs(IMG, exist_ok=True)
     os.makedirs(WORK, exist_ok=True)
-    print("USB Doctor -- surface + capacity test suite\n")
+    print("FlashPhysician -- surface + capacity test suite\n")
     _capture_original()
     for fn in (test_pattern_is_deterministic, test_healthy_surface_passes,
                test_dead_sector_detected, test_write_failure_aborts_cleanly,

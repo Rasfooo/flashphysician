@@ -1,12 +1,12 @@
-"""USB Doctor -- diagnose, repair and recover removable storage.
+"""FlashPhysician -- diagnose, repair and recover removable storage.
 
 The public surface is small on purpose. Everything is reachable through
-`usbdoctor` (CLI) and `usbdoctor.gui` (desktop), and both are thin layers over
+`flashphysician` (CLI) and `flashphysician.gui` (desktop), and both are thin layers over
 `core` (what is wrong) and `recovery` (getting data back).
 
 Quick start from Python:
 
-    from usbdoctor import diagnose_device, format_report
+    from flashphysician import diagnose_device, format_report
 
     report = diagnose_device("/dev/sdb")
     print(format_report(report))
@@ -15,7 +15,7 @@ Quick start from Python:
 __version__ = "1.0.0"
 __author__ = "Rasfooo"
 __license__ = "MIT"
-__url__ = "https://github.com/Rasfooo/usbdoctor"
+__url__ = "https://github.com/Rasfooo/flashphysician"
 
 __all__ = [
     "__version__",
@@ -38,7 +38,7 @@ def format_report(report, color: bool = False) -> str:
 
 
 def __getattr__(name: str):
-    # keep heavy imports out of `import usbdoctor`
+    # keep heavy imports out of `import flashphysician`
     if name == "Severity":
         from .core.diagnose import Severity
         return Severity

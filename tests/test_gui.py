@@ -26,13 +26,13 @@ ROOT = os.path.dirname(HERE)
 sys.path.insert(0, ROOT)
 
 from tests import fixtures as fx                                       # noqa: E402
-from usbdoctor.core.diagnose import quick_diagnose                     # noqa: E402
-from usbdoctor.core.repair import (                                    # noqa: E402
+from flashphysician.core.diagnose import quick_diagnose                     # noqa: E402
+from flashphysician.core.repair import (                                    # noqa: E402
     plan_clear_fat_dirty, plan_fix_fat_type_label, plan_rebuild_mbr_from_fs,
     plan_restore_fat32_boot_backup, plan_restore_gpt_from_backup,
     plan_restore_mbr_signature,
 )
-from usbdoctor.core.structures import FsType, human                    # noqa: E402
+from flashphysician.core.structures import FsType, human                    # noqa: E402
 
 WORK = os.path.join(ROOT, "tests", "_work", "gui")
 results: list[tuple[str, bool, str]] = []
@@ -100,7 +100,7 @@ def gui_plan_selection(path: str, rep):
 
 
 def test_gui_module_compiles() -> None:
-    src = os.path.join(ROOT, "usbdoctor", "gui.py")
+    src = os.path.join(ROOT, "flashphysician", "gui.py")
     try:
         ast.parse(open(src, encoding="utf-8").read())
         ok, why = True, ""
@@ -112,7 +112,7 @@ def test_gui_module_compiles() -> None:
 def test_no_duplicate_method_definitions() -> None:
     """A second `def` with the same name silently replaces the first. That is
     how a handler can appear wired up and never run."""
-    src = os.path.join(ROOT, "usbdoctor", "gui.py")
+    src = os.path.join(ROOT, "flashphysician", "gui.py")
     tree = ast.parse(open(src, encoding="utf-8").read())
     dupes = []
     for node in ast.walk(tree):
@@ -138,7 +138,7 @@ def test_all_commands_have_a_finish_handler() -> None:
     Only tuples of the form `return ("kind", payload)` inside worker closures
     count -- plain text returns from advice builders are not commands.
     """
-    src = open(os.path.join(ROOT, "usbdoctor", "gui.py"), encoding="utf-8").read()
+    src = open(os.path.join(ROOT, "flashphysician", "gui.py"), encoding="utf-8").read()
     tree = ast.parse(src)
     kinds: set[str] = set()
     for node in ast.walk(tree):
@@ -219,7 +219,7 @@ def test_advice_mentions_orphan_recovery() -> None:
     rep = quick_diagnose(p)
 
     # call the advice builder without constructing a Tk widget
-    src = open(os.path.join(ROOT, "usbdoctor", "gui.py"), encoding="utf-8").read()
+    src = open(os.path.join(ROOT, "flashphysician", "gui.py"), encoding="utf-8").read()
     tree = ast.parse(src)
     fn = None
     for node in ast.walk(tree):
@@ -231,7 +231,7 @@ def test_advice_mentions_orphan_recovery() -> None:
     module = ast.Module(body=[fn], type_ignores=[])
     ast.fix_missing_locations(module)
     ns = {"FsType": FsType, "human": human, "Severity": __import__(
-        "usbdoctor.core.diagnose", fromlist=["Severity"]).Severity}
+        "flashphysician.core.diagnose", fromlist=["Severity"]).Severity}
     code = compile(module, "<advice>", "exec")
     exec(code, ns)
     # the method expects self; call it with a dummy
@@ -246,14 +246,14 @@ def test_advice_for_fake_capacity_absent_when_not_tested() -> None:
     p = os.path.join(WORK, "g6.img")
     fx.make_fat32(p, 1024)
     rep = quick_diagnose(p)
-    src = open(os.path.join(ROOT, "usbdoctor", "gui.py"), encoding="utf-8").read()
+    src = open(os.path.join(ROOT, "flashphysician", "gui.py"), encoding="utf-8").read()
     tree = ast.parse(src)
     fn = [n for n in ast.walk(tree)
           if isinstance(n, ast.FunctionDef) and n.name == "_advice_for"][0]
     module = ast.Module(body=[fn], type_ignores=[])
     ast.fix_missing_locations(module)
     ns = {"FsType": FsType, "human": human, "Severity": __import__(
-        "usbdoctor.core.diagnose", fromlist=["Severity"]).Severity}
+        "flashphysician.core.diagnose", fromlist=["Severity"]).Severity}
     exec(compile(module, "<advice>", "exec"), ns)
     text = ns["_advice_for"](object(), rep)
     ok = "healthy" in text.lower() and "Surface scan" in text
@@ -263,7 +263,7 @@ def test_advice_for_fake_capacity_absent_when_not_tested() -> None:
 
 def main() -> int:
     os.makedirs(WORK, exist_ok=True)
-    print("USB Doctor -- GUI test suite (headless)\n")
+    print("FlashPhysician -- GUI test suite (headless)\n")
     for fn in (test_gui_module_compiles, test_no_duplicate_method_definitions,
                test_all_commands_have_a_finish_handler,
                test_orphan_drive_produces_one_plan,

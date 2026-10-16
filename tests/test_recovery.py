@@ -16,11 +16,11 @@ ROOT = os.path.dirname(HERE)
 sys.path.insert(0, ROOT)
 
 from tests import fixtures as fx                                       # noqa: E402
-from usbdoctor.core.imaging import Source                              # noqa: E402
-from usbdoctor.core.structures import (                                # noqa: E402
+from flashphysician.core.imaging import Source                              # noqa: E402
+from flashphysician.core.structures import (                                # noqa: E402
     parse_boot_sector, read_fat_entries,
 )
-from usbdoctor.recovery.files import (                                 # noqa: E402
+from flashphysician.recovery.files import (                                 # noqa: E402
     ATTR_ARCHIVE, ATTR_HIDDEN, carve_files, extract_fat_file,
     recover_files, walk_fat_directory,
 )
@@ -53,7 +53,7 @@ def test_live_file_recovered_exactly() -> None:
     with Source(p) as src:
         info = parse_boot_sector(src.read_at(0, 512), 0)
         data = extract_fat_file(src, info, 0, live[0], fat)
-    want = b"This is the live file: USB Doctor recovery test.\n" * 40
+    want = b"This is the live file: FlashPhysician recovery test.\n" * 40
     check("live_file_recovered_exactly", data == want,
           f"len {len(data)} vs {len(want)} equal={data == want}")
 
@@ -146,7 +146,7 @@ def test_full_recovery_writes_files() -> None:
     rep = recover_files(p, dest)
     names = sorted(os.path.basename(n) for n, _ in rep.recovered)
     want_payloads = {
-        b"This is the live file: USB Doctor recovery test.\n" * 40,
+        b"This is the live file: FlashPhysician recovery test.\n" * 40,
         b"DELETED FILE CONTENT -- should come back intact.\n" * 40,
         b"Hidden file content, attribute byte says HIDDEN.\n" * 40,
         b"Nested file inside a subdirectory.\n" * 40,
@@ -208,7 +208,7 @@ def test_no_fat_reports_honestly() -> None:
 def main() -> int:
     os.makedirs(IMG, exist_ok=True)
     os.makedirs(WORK, exist_ok=True)
-    print("USB Doctor -- file recovery test suite\n")
+    print("FlashPhysician -- file recovery test suite\n")
     for fn in (test_live_file_recovered_exactly, test_hidden_file_detected_and_readable,
                test_deleted_entry_recovered_via_contiguous_fallback,
                test_multicluster_chain_followed, test_subdirectory_traversed,

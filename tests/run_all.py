@@ -35,7 +35,7 @@ def main() -> int:
     env = dict(os.environ)
     env["PYTHONPATH"] = str(ROOT)
 
-    print("USB Doctor -- full test suite")
+    print("FlashPhysician -- full test suite")
     print("=" * 72)
     total_pass = total_all = 0
     failed_suites: list[str] = []

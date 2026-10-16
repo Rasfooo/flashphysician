@@ -3,7 +3,7 @@ requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "usbdoctor"
+name = "flashphysician"
 version = "1.0.0"
 description = "Diagnose, repair and recover USB flash drives, SD cards and memory cards"
 readme = "README.md"
@@ -41,22 +41,22 @@ dev = ["pytest>=7", "pyinstaller>=6"]
 build = ["pyinstaller>=6"]
 
 [project.urls]
-Homepage = "https://github.com/Rasfooo/usbdoctor"
-Repository = "https://github.com/Rasfooo/usbdoctor"
-Issues = "https://github.com/Rasfooo/usbdoctor/issues"
-Changelog = "https://github.com/Rasfooo/usbdoctor/blob/main/CHANGELOG.md"
+Homepage = "https://github.com/Rasfooo/flashphysician"
+Repository = "https://github.com/Rasfooo/flashphysician"
+Issues = "https://github.com/Rasfooo/flashphysician/issues"
+Changelog = "https://github.com/Rasfooo/flashphysician/blob/main/CHANGELOG.md"
 
 [project.scripts]
-usbdoctor = "usbdoctor.cli:main"
+flashphysician = "flashphysician.cli:main"
 
 [project.gui-scripts]
-usbdoctor-gui = "usbdoctor.gui:main"
+flashphysician-gui = "flashphysician.gui:main"
 
 [tool.setuptools]
-packages = ["usbdoctor", "usbdoctor.core", "usbdoctor.recovery", "usbdoctor.backends"]
+packages = ["flashphysician", "flashphysician.core", "flashphysician.recovery", "flashphysician.backends"]
 
 [tool.setuptools.package-data]
-usbdoctor = ["../assets/*.svg", "../assets/*.png", "../assets/*.txt"]
+flashphysician = ["../assets/*.svg", "../assets/*.png", "../assets/*.txt"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

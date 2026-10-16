@@ -104,7 +104,7 @@ class RepairPlan:
                     "would_write": len(self.ops), "plan": self.describe()}
 
         bdir = backup_dir or self.backup_dir or os.path.join(
-            os.path.expanduser("~"), ".usbdoctor", "backups")
+            os.path.expanduser("~"), ".flashphysician", "backups")
         Path(bdir).mkdir(parents=True, exist_ok=True)
 
         written = 0

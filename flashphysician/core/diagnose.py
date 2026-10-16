@@ -804,7 +804,7 @@ def _score(rep: Report) -> None:
 
     if orphan:
         rep.verdict = ("Recoverable -- partition table lost, filesystem intact. "
-                       "Run `usbdoctor repair` to rebuild the table.")
+                       "Run `flashphysician repair` to rebuild the table.")
         rep.health = max(rep.health, 45)
         rep.grade = _grade(rep.health)
         return

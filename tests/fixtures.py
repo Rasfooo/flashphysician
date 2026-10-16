@@ -678,7 +678,7 @@ def make_fat32_with_files(path: str, size_mb: int = 1024,
 
     ROOT = 2
     SUBDIR = 3
-    payload_live = b"This is the live file: USB Doctor recovery test.\n" * 40
+    payload_live = b"This is the live file: FlashPhysician recovery test.\n" * 40
     payload_deleted = b"DELETED FILE CONTENT -- should come back intact.\n" * 40
     payload_hidden = b"Hidden file content, attribute byte says HIDDEN.\n" * 40
     payload_sub = b"Nested file inside a subdirectory.\n" * 40

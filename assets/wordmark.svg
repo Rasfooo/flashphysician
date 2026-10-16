@@ -30,7 +30,7 @@
   <circle cx="182" cy="98" r="9" fill="#3fb950"/>
 
   <text x="282" y="150" font-family="Segoe UI, SF Pro Display, Helvetica Neue, Arial, system-ui, sans-serif" font-size="78" font-weight="700"
-        fill="url(#tg)" letter-spacing="-1.5">USB Doctor</text>
+        fill="url(#tg)" letter-spacing="-1.5">FlashPhysician</text>
   <text x="286" y="204" font-family="Segoe UI, SF Pro Display, Helvetica Neue, Arial, system-ui, sans-serif" font-size="30" font-weight="400"
         fill="#4ea1ff" letter-spacing="0.4">Diagnose &#183; Repair &#183; Recover</text>
   <text x="286" y="248" font-family="Segoe UI, SF Pro Display, Helvetica Neue, Arial, system-ui, sans-serif" font-size="22" font-weight="400"

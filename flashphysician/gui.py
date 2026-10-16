@@ -53,7 +53,7 @@ SEV_COLOR = {
 class App(tk.Tk):
     def __init__(self) -> None:
         super().__init__()
-        self.title(f"USB Doctor {__version__} -- Diagnose, Repair, Recover")
+        self.title(f"FlashPhysician {__version__} -- Diagnose, Repair, Recover")
         self.geometry("1080x740")
         self.minsize(900, 620)
         self.configure(bg=BG)
@@ -110,7 +110,7 @@ class App(tk.Tk):
     def _build(self) -> None:
         head = ttk.Frame(self, padding=(18, 14, 18, 6))
         head.pack(fill="x")
-        ttk.Label(head, text="USB Doctor", style="Head.TLabel").pack(side="left")
+        ttk.Label(head, text="FlashPhysician", style="Head.TLabel").pack(side="left")
         ttk.Label(head, text="  Diagnose · Repair · Recover",
                   style="Dim.TLabel").pack(side="left")
 
@@ -312,10 +312,10 @@ class App(tk.Tk):
     def analyse(self) -> None:
         path = self._selected_path()
         if not path:
-            messagebox.showinfo("USB Doctor", "Pick a drive first.")
+            messagebox.showinfo("FlashPhysician", "Pick a drive first.")
             return
         if not os.path.exists(path):
-            messagebox.showerror("USB Doctor", f"{path} is not accessible.")
+            messagebox.showerror("FlashPhysician", f"{path} is not accessible.")
             return
         self._busy(True, f"analysing {path} ...")
         self._write(self.txt, "Reading partition table and filesystem metadata...",
@@ -442,7 +442,7 @@ class App(tk.Tk):
     # -- destructive -----------------------------------------------------
     def _require_report(self) -> bool:
         if not self.report:
-            messagebox.showinfo("USB Doctor", "Press Analyse first.")
+            messagebox.showinfo("FlashPhysician", "Press Analyse first.")
             return False
         return True
 
@@ -502,7 +502,7 @@ class App(tk.Tk):
 
         if not final:
             messagebox.showinfo(
-                "USB Doctor",
+                "FlashPhysician",
                 "No automatically repairable problem was identified.\n\n"
                 "Try Surface scan to check the hardware, or Check filesystem.")
             return
@@ -512,7 +512,7 @@ class App(tk.Tk):
             for l, p in final)
         if not self._confirm(
                 "Apply repair?",
-                f"USB Doctor will write to:\n{path}\n\n{detail}\n\n"
+                f"FlashPhysician will write to:\n{path}\n\n{detail}\n\n"
                 "A copy of every sector that gets overwritten is saved first, "
                 "so this can be undone.\n\nProceed?"):
             return
@@ -533,7 +533,7 @@ class App(tk.Tk):
         path = self._selected_path()
         if not self._confirm(
                 "Surface scan",
-                f"USB Doctor will write test patterns to {path} and read them "
+                f"FlashPhysician will write test patterns to {path} and read them "
                 "back to verify the storage cells hold data.\n\n"
                 "This DESTROYS the contents of the tested area.\n\n"
                 "Test the whole drive?"):
@@ -548,7 +548,7 @@ class App(tk.Tk):
         path = self._selected_path()
         if not self._confirm(
                 "Capacity test",
-                f"USB Doctor will write markers across {path} to check whether "
+                f"FlashPhysician will write markers across {path} to check whether "
                 "the advertised size is real.\n\n"
                 "This DESTROYS the contents of the drive.\n\nProceed?"):
             return
@@ -585,7 +585,7 @@ class App(tk.Tk):
             return
         if os.path.abspath(dest).startswith(os.path.abspath(path)):
             messagebox.showerror(
-                "USB Doctor",
+                "FlashPhysician",
                 "The destination is inside the drive being recovered.\n\n"
                 "Pick a different folder -- writing to the damaged drive can "
                 "overwrite the very files you are trying to save.")

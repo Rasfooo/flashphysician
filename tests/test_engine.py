@@ -20,10 +20,10 @@ ROOT = os.path.dirname(HERE)
 sys.path.insert(0, ROOT)
 
 from tests import fixtures as fx                                     # noqa: E402
-from usbdoctor.core.diagnose import (                                # noqa: E402
+from flashphysician.core.diagnose import (                                # noqa: E402
     Severity, format_report, quick_diagnose,
 )
-from usbdoctor.core.structures import TableType, FsType              # noqa: E402
+from flashphysician.core.structures import TableType, FsType              # noqa: E402
 
 IMG = os.path.join(ROOT, "tests", "_images")
 
@@ -81,7 +81,7 @@ def case(name: str, builder, expects_fs=None, expects_table=None,
 
 def main() -> int:
     os.makedirs(IMG, exist_ok=True)
-    print("USB Doctor -- engine test suite")
+    print("FlashPhysician -- engine test suite")
     print(f"images in {IMG}\n")
 
     print("partition tables")

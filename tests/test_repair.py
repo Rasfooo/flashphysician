@@ -18,9 +18,9 @@ ROOT = os.path.dirname(HERE)
 sys.path.insert(0, ROOT)
 
 from tests import fixtures as fx                                     # noqa: E402
-from usbdoctor.core import repair                                    # noqa: E402
-from usbdoctor.core.diagnose import Severity, quick_diagnose         # noqa: E402
-from usbdoctor.core.structures import FsType, TableType              # noqa: E402
+from flashphysician.core import repair                                    # noqa: E402
+from flashphysician.core.diagnose import Severity, quick_diagnose         # noqa: E402
+from flashphysician.core.structures import FsType, TableType              # noqa: E402
 
 IMG = os.path.join(ROOT, "tests", "_images")
 WORK = os.path.join(ROOT, "tests", "_work")
@@ -224,7 +224,7 @@ def Path_copy(a: str, b: str) -> None:
 def main() -> int:
     os.makedirs(IMG, exist_ok=True)
     os.makedirs(WORK, exist_ok=True)
-    print("USB Doctor -- repair test suite\n")
+    print("FlashPhysician -- repair test suite\n")
     for fn in (test_mbr_signature_restore, test_mbr_rebuild_from_orphan_fs,
                test_gpt_restore_from_backup, test_fat32_boot_backup_restore,
                test_fat_dirty_clear, test_fat_type_label_fix,

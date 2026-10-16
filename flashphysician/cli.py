@@ -56,16 +56,16 @@ def _progress_printer(label: str):
 
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
-        prog="usbdoctor",
+        prog="flashphysician",
         description="Diagnose, repair and recover USB flash drives, SD cards "
                     "and other removable media.",
-        epilog="Run `usbdoctor <command> --help` for details on any command. "
+        epilog="Run `flashphysician <command> --help` for details on any command. "
                "Every write is backed up and printed before it happens unless "
                "--yes is given.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     p.add_argument("--version", action="version",
-                   version=f"usbdoctor {__version__}")
+                   version=f"flashphysician {__version__}")
     # accepted both before and after the subcommand, since people type it in
     # both positions and argparse would otherwise reject the one they chose
     p.add_argument("--no-color", action="store_true", help="plain text output")
@@ -171,7 +171,7 @@ def cmd_info(args) -> int:
     from .backends.linux import get_backend
     caps = get_backend().capabilities()
     print(BANNER)
-    print(f"  usbdoctor {__version__}\n")
+    print(f"  flashphysician {__version__}\n")
     print("  This system:")
     for line in caps.summary().splitlines():
         print("    " + line)
@@ -320,8 +320,8 @@ def cmd_repair(args) -> int:
 
     if not plans:
         print("\n  No automatically repairable fault identified.")
-        print("  If the drive is not working, try `usbdoctor scan` to check the "
-              "medium, or `usbdoctor fix` for a filesystem check.")
+        print("  If the drive is not working, try `flashphysician scan` to check the "
+              "medium, or `flashphysician fix` for a filesystem check.")
         return 1
 
     print("\n  " + "=" * 70)
@@ -531,7 +531,7 @@ def main(argv: list[str] | None = None) -> int:
     except Exception as exc:
         print(f"\n  unexpected error: {type(exc).__name__}: {exc}",
               file=sys.stderr)
-        if getattr(args, "debug", False) or os.environ.get("USBDOCTOR_DEBUG"):
+        if getattr(args, "debug", False) or os.environ.get("FLASHPHYSICIAN_DEBUG"):
             raise
         return 70
 

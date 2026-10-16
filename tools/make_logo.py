@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Draw the USB Doctor logo as SVG -- no design tool, no binary asset.
+"""Draw the FlashPhysician logo as SVG -- no design tool, no binary asset.
 
 Keeping the logo as code means it regenerates identically on any machine and
 scales to any size (icon, README banner, installer splash) without shipping
@@ -159,8 +159,8 @@ def build_svg(size: int = 512) -> str:
 
     return f'''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {s} {s}"
      width="{s}" height="{s}" role="img"
-     aria-label="USB Doctor: diagnose, repair and recover removable storage">
-  <title>USB Doctor</title>
+     aria-label="FlashPhysician: diagnose, repair and recover removable storage">
+  <title>FlashPhysician</title>
   <desc>A shield containing a USB plug with an ECG heartbeat trace, and a
   green status dot.</desc>
 
@@ -265,7 +265,7 @@ def build_wordmark(width: int = 1280, height: int = 400) -> str:
   <circle cx="{icon_cx + 50}" cy="{icon_cy - 74}" r="9" fill="{OK}"/>
 
   <text x="282" y="150" font-family="{FONT}" font-size="78" font-weight="700"
-        fill="url(#tg)" letter-spacing="-1.5">USB Doctor</text>
+        fill="url(#tg)" letter-spacing="-1.5">FlashPhysician</text>
   <text x="286" y="204" font-family="{FONT}" font-size="30" font-weight="400"
         fill="{ACCENT}" letter-spacing="0.4">Diagnose &#183; Repair &#183; Recover</text>
   <text x="286" y="248" font-family="{FONT}" font-size="22" font-weight="400"
@@ -281,7 +281,7 @@ def build_wordmark(width: int = 1280, height: int = 400) -> str:
 def build_terminal_card() -> str:
     """A stylised terminal card for the README, showing real output."""
     lines = [
-        ("$ ", "usbdoctor diagnose /dev/sdb", FG),
+        ("$ ", "flashphysician diagnose /dev/sdb", FG),
         ("", "", ""),
         ("", "  USB DOCTOR -- DIAGNOSTIC REPORT", ACCENT),
         ("", "  Device      : /dev/sdb", FG),
@@ -323,7 +323,7 @@ def build_terminal_card() -> str:
   <circle cx="46" cy="17" r="6" fill="{WARN}"/>
   <circle cx="68" cy="17" r="6" fill="{OK}"/>
   <text x="450" y="22" font-family="{MONO}" font-size="13"
-        fill="#8b98a5" text-anchor="middle">usbdoctor -- diagnose, repair, recover</text>
+        fill="#8b98a5" text-anchor="middle">flashphysician -- diagnose, repair, recover</text>
   <g transform="translate(0, 40)">
     {"".join(rows)}
   </g>
@@ -542,7 +542,7 @@ def try_png(svg_path: Path, out_path: Path, size: int,
 
 
 def main() -> int:
-    print("USB Doctor -- generating logo assets\n")
+    print("FlashPhysician -- generating logo assets\n")
     write_svg(ASSETS / "logo.svg", build_svg(512))
     write_svg(ASSETS / "logo.svg".replace(".svg", "-small.svg"), build_svg(64))
     write_svg(ASSETS / "wordmark.svg", build_wordmark())

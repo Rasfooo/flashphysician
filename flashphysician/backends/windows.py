@@ -93,7 +93,7 @@ class WindowsBackend(Backend):
         res = run(argv, timeout=12 * 3600)
         if "cannot lock" in res.combined.lower() or "another process" in res.combined.lower():
             res.stderr += (
-                "\n[USB Doctor] The volume is in use or is the system volume. "
+                "\n[FlashPhysician] The volume is in use or is the system volume. "
                 "Close anything using it, or accept the scheduled-at-reboot check.")
         return res
 
@@ -147,7 +147,7 @@ class WindowsBackend(Backend):
         across Windows versions, and a half-consumed script is how people end
         up with an unexpectedly `clean`ed wrong disk.
         """
-        fd, path = tempfile.mkstemp(suffix=".txt", prefix="usbdoctor_")
+        fd, path = tempfile.mkstemp(suffix=".txt", prefix="flashphysician_")
         try:
             with os.fdopen(fd, "w", newline="\r\n") as fh:
                 fh.write(script)
@@ -159,7 +159,7 @@ class WindowsBackend(Backend):
                 pass
 
     def rebuild_partition_table(self, disk_number: int, fstype: str = "fat32",
-                                label: str = "USBDOCTOR", size_mb: int | None = None,
+                                label: str = "FLASHPHYSICIAN", size_mb: int | None = None,
                                 confirm: bool = False) -> CommandResult:
         """clean + create partition + format. DESTRUCTIVE by definition.
 
@@ -283,8 +283,8 @@ class WindowsBackend(Backend):
         if not letter:
             return CommandResult(argv=["fsutil"], missing=True,
                                  stderr="no drive letter to flush")
-        return run(["cmd", "/c", f"echo. > {letter}:\\__usbdoctor_flush && "
-                                 f"del {letter}:\\__usbdoctor_flush"], timeout=60)
+        return run(["cmd", "/c", f"echo. > {letter}:\\__flashphysician_flush && "
+                                 f"del {letter}:\\__flashphysician_flush"], timeout=60)
 
     def rescan(self, device: str = "") -> CommandResult:
         return _ps("Update-HostStorageCache; 'host storage cache updated'", timeout=120)

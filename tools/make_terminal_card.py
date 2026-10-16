@@ -42,7 +42,7 @@ def esc(s: str) -> str:
 
 def capture_session() -> list[str]:
     """Run the real tool and return its output lines."""
-    demo = Path(tempfile.gettempdir()) / "usbdoctor_demo.img"
+    demo = Path(tempfile.gettempdir()) / "flashphysician_demo.img"
     env = dict(os.environ)
     env["PYTHONPATH"] = str(ROOT)
 
@@ -52,7 +52,7 @@ def capture_session() -> list[str]:
     fx.make_lost_partition_table(str(demo), 1024)
 
     proc = subprocess.run(
-        [sys.executable, "-m", "usbdoctor", "diagnose", str(demo), "--no-color"],
+        [sys.executable, "-m", "flashphysician", "diagnose", str(demo), "--no-color"],
         capture_output=True, text=True, cwd=str(ROOT), env=env, timeout=300)
     lines = [l for l in (proc.stdout or "").splitlines() if l.strip()]
 
@@ -142,14 +142,14 @@ def build_svg(lines: list[str], width: int = 940) -> str:
   <circle cx="48" cy="17" r="6" fill="{WARN}"/>
   <circle cx="70" cy="17" r="6" fill="{OK}"/>
   <text x="{width / 2:.0f}" y="22" font-family="{MONO}" font-size="13"
-        fill="{DIM}" text-anchor="middle">usbdoctor -- diagnose, repair, recover</text>
+        fill="{DIM}" text-anchor="middle">flashphysician -- diagnose, repair, recover</text>
   {"".join(rows)}
 </svg>
 '''
 
 
 def main() -> int:
-    print("USB Doctor -- rendering the terminal card from a real session\n")
+    print("FlashPhysician -- rendering the terminal card from a real session\n")
     try:
         lines = capture_session()
     except Exception as exc:
