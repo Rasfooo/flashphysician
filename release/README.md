@@ -47,7 +47,7 @@ read.
 
 ### Windows — portable, nothing to install
 
-Download `USBDoctor-portable.exe` from
+Download `FlashPhysician-portable-win64.exe` from
 [Releases](https://github.com/Rasfooo/flashphysician/releases) and run it. No Python,
 no runtime, no installer. It is a single file you can keep on the very drive
 you are rescuing.
@@ -256,7 +256,7 @@ python tools\make_ico.py
 pyinstaller tools\flashphysician.spec --noconfirm
 ```
 
-Output: `dist/USBDoctor/` (windowed), `dist/USBDoctor-portable.exe` (single
+Output: `dist/FlashPhysician/` (windowed), `dist/FlashPhysician-portable.exe` (single
 file), `dist/flashphysician-cli/` (console build for scripting).
 
 ---
@@ -323,6 +323,41 @@ flashphysician/
 tests/              fixtures + 74 tests, no framework required
 tools/              logo generator, .ico builder, PyInstaller spec
 ```
+
+---
+
+## Contributing
+
+Issues and pull requests are welcome. A few things that help:
+
+**Report a bug** — open an [issue](https://github.com/Rasfooo/flashphysician/issues)
+with:
+
+- What you ran (exact command)
+- What you expected, what happened instead
+- The `diagnose` output (it never writes, so it is safe to run on a dying drive)
+- Your OS and Python version
+
+Please **do not** attach raw disk images — they contain your data. A
+`diagnose --json` report is enough for most bug reports.
+
+**Reproduce a failure** — the test suite builds byte-exact images of each
+failure mode in `tests/fixtures.py`. If you hit a case it does not cover, a
+new fixture plus an assertion is the most useful contribution.
+
+**Add a diagnostic** — every check lives in
+`flashphysician/core/diagnose.py` as a `Finding` with a stable code. The health
+score, verdict and repair plan all derive from those codes, so a new check is
+a single place to touch.
+
+**Run the tests**
+
+```bash
+python3 tests/run_all.py    # 74 tests, no framework required
+```
+
+Code style is plain PEP 8 with type hints. Keep the safety model: diagnosis
+must never write, and every write must be plannable, shown and backed up.
 
 ---
 
