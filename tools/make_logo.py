@@ -447,9 +447,7 @@ def _crop_png_height(path: Path, target_w: int, target_h: int, max_overshoot: in
     out = b"\x89PNG\r\n\x1a\n"
     out += chunk(b"IHDR", bytes(new_ihdr))
     for t, c, _ in chunks:
-        if t == b"IDAT":
-            continue
-        if t == b"IEND":
+        if t in (b"IHDR", b"IDAT", b"IEND"):
             continue
         out += chunk(t, c)
     out += chunk(b"IDAT", zlib.compress(body, 9))
