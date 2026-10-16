@@ -1,0 +1,137 @@
+name: build
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  test:
+    name: tests (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: ["3.9", "3.12"]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Run test suite
+        run: python tests/run_all.py
+        shell: bash
+
+  build-exe:
+    name: build Windows .exe
+    needs: test
+    # Built on Windows so the artefact is a genuine Windows binary, not a
+    # cross-compiled guess: PyInstaller cannot produce a real .exe from Linux.
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install build tooling
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install pyinstaller pillow
+        shell: cmd
+
+      - name: Generate logo assets (PNG previews + icon)
+        run: |
+          python tools/make_logo.py
+          python tools/make_ico.py
+        shell: cmd
+
+      - name: Build executables
+        run: pyinstaller tools/flashphysician.spec --noconfirm
+        shell: cmd
+
+      - name: Smoke-test the console build
+        run: |
+          dist\flashphysician-cli\flashphysician-cli.exe --version
+          dist\flashphysician-cli\flashphysician-cli.exe info
+        shell: cmd
+
+      - name: Smoke-test the portable build (GUI must at least import)
+        run: |
+          python -c "import flashphysician.gui; print('gui module ok')"
+          if exist dist\USBDoctor-portable.exe (echo portable exe built)
+        shell: cmd
+
+      - name: Collect artefacts
+        shell: bash
+        run: |
+          mkdir -p release
+          if [ -f dist/USBDoctor-portable.exe ]; then
+            cp dist/USBDoctor-portable.exe release/
+          fi
+          if [ -d dist/flashphysician-cli ]; then
+            7z a -tzip release/flashphysician-cli-win.zip dist/flashphysician-cli/*
+          fi
+          cp README.md CHANGELOG.md LICENSE release/ 2>/dev/null || true
+          ls -la release
+
+      - name: Upload build artefacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: flashphysician-windows-${{ github.sha }}
+          path: release/*
+          if-no-files-found: error
+
+  release:
+    name: publish release
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [test, build-exe]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Flatten artefacts
+        run: |
+          mkdir -p dist
+          find artifacts -type f -exec cp {} dist/ \;
+          ls -la dist
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*
+          generate_release_notes: true
+          body: |
+            **FlashPhysician ${{ github.ref_name }}** -- portable, no install needed.
+
+            > SmartScreen will warn about any newly published unsigned exe.
+            > Choose **More info → Run anyway**, or build from source if you
+            > would rather not trust a download:
+
+            ```
+            git clone https://github.com/Rasfooo/flashphysician
+            cd flashphysician
+            pip install pyinstaller
+            python tools/make_logo.py
+            pyinstaller tools/flashphysician.spec --noconfirm
+            ```
+
+            | File | Purpose |
+            |---|---|
+            | `USBDoctor-portable.exe` | GUI, single file, double-click to run |
+            | `flashphysician-cli-win.zip` | Console build for scripting |
+            | `README.md` / `CHANGELOG.md` | Documentation |
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

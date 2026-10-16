@@ -265,17 +265,27 @@ class WindowsBackend(Backend):
         files are corrupt after I unplugged it".
         """
         letter = self._letter(device)
+        if not letter:
+            # A device that is not a drive letter (e.g. ``\\?\Volume{...}`` or
+            # a mistyped name) cannot be ejected through Shell.Application.
+            # Report that plainly rather than falling back to drive C, which
+            # would be a no-op at best and dangerous at worst.
+            return CommandResult(
+                argv=["eject", device], returncode=1,
+                stderr=f"not a drive letter (got {device!r}); "
+                       "expected a letter such as 'E:' or a \\\\?\\Volume{{...}} path",
+            )
         run(["cmd", "/c", "echo.", ">", "nul"], timeout=10)   # no-op flush marker
         if _which_all(["powershell"])["powershell"]:
             script = (
                 "$d = New-Object -comObject Shell.Application; "
                 f"$d.Namespace(17).ParseName('{letter}:').InvokeVerb('Eject')"
-                if letter else
-                "Write-Output 'no drive letter; unmounting instead'")
+            )
             res = _ps(script, timeout=60)
             if res.ok:
                 return res
-        return _ps("Write-VolumeCache -DriveLetter " + (letter or "C") + "; "
+        # Fall back to flushing the volume cache for the resolved letter only.
+        return _ps("Write-VolumeCache -DriveLetter " + letter + "; "
                    "Write-Output 'cache flushed'", timeout=60)
 
     def flush(self, device: str) -> CommandResult:
