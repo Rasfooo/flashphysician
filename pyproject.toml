@@ -1,0 +1,66 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "usbdoctor"
+version = "1.0.0"
+description = "Diagnose, repair and recover USB flash drives, SD cards and memory cards"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [{ name = "Rasfooo", email = "rasfooo@users.noreply.github.com" }]
+keywords = [
+    "usb", "flash-drive", "repair", "recovery", "data-recovery",
+    "sd-card", "memory-card", "fat32", "exfat", "ntfs", "partition-table",
+    "mbr", "gpt", "bad-sectors", "fake-flash",
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: Console",
+    "Environment :: Win32 (MS Windows)",
+    "Environment :: X11 Applications",
+    "Intended Audience :: End Users/Desktop",
+    "Intended Audience :: System Administrators",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3",
+    "Topic :: System :: Filesystems",
+    "Topic :: System :: Hardware",
+    "Topic :: System :: Recovery Tools",
+    "Topic :: Utilities",
+]
+# No install_requires: the whole point is that the tool runs on a bare Python
+# (Tkinter is stdlib; every OS-level helper is invoked as a subprocess and
+# absence is reported rather than crashing).
+dependencies = []
+
+[project.optional-dependencies]
+dev = ["pytest>=7", "pyinstaller>=6"]
+build = ["pyinstaller>=6"]
+
+[project.urls]
+Homepage = "https://github.com/Rasfooo/usbdoctor"
+Repository = "https://github.com/Rasfooo/usbdoctor"
+Issues = "https://github.com/Rasfooo/usbdoctor/issues"
+Changelog = "https://github.com/Rasfooo/usbdoctor/blob/main/CHANGELOG.md"
+
+[project.scripts]
+usbdoctor = "usbdoctor.cli:main"
+
+[project.gui-scripts]
+usbdoctor-gui = "usbdoctor.gui:main"
+
+[tool.setuptools]
+packages = ["usbdoctor", "usbdoctor.core", "usbdoctor.recovery", "usbdoctor.backends"]
+
+[tool.setuptools.package-data]
+usbdoctor = ["../assets/*.svg", "../assets/*.png", "../assets/*.txt"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+# the suites are plain scripts (no pytest fixtures needed) so they also run
+# without pytest installed: python3 tests/test_engine.py
+addopts = "-q"
