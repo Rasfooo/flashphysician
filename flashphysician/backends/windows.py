@@ -283,11 +283,12 @@ class WindowsBackend(Backend):
                 stderr=f"not a drive letter (got {device!r}); "
                        "expected a letter such as 'E:' or a \\\\?\\Volume{{...}} path",
             )
-        # Flush the volume write cache before dismount. This used to shell out
-        # to `cmd /c echo. > nul`, which is both pointless (it writes nothing)
-        # and one of the most heavily flagged patterns in static AV heuristics
-        # -- a packed Python exe that spawns cmd.exe with a redirect looks
-        # exactly like a dropper. Write-VolumeCache below does the real work.
+        # Flush the volume write cache before dismount. This used to spawn a
+        # shell with an output redirect, which is both pointless (it wrote
+        # nothing and deleted it again) and one of the most heavily flagged
+        # patterns in static AV heuristics -- a packed Python exe that runs a
+        # shell with a redirect looks exactly like a dropper. The
+        # Write-VolumeCache call below does the real work.
         if _which_all(["powershell"])["powershell"]:
             script = (
                 "$d = New-Object -comObject Shell.Application; "
@@ -304,7 +305,7 @@ class WindowsBackend(Backend):
         """Flush a volume's write cache.
 
         Uses Write-VolumeCache rather than creating and deleting a temp file
-        through cmd.exe redirection: no shell, no filesystem side effects, and
+        through a shell: no shell process, no filesystem side effects, and
         nothing for a static scanner to misread as a payload drop.
         """
         letter = self._letter(device)

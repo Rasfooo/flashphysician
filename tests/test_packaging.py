@@ -43,12 +43,13 @@ def read(path: Path) -> str:
 
 
 def code_only(path: Path) -> str:
-    """Strip comments and docstrings so the guard checks what ships in the
-    bytecode, not what the author wrote about it. A binary built from this
-    source contains the literals, not the prose around them."""
+    """Strip line comments only, keeping docstrings.
+
+    Docstrings matter here: they are string literals and they DO end up in the
+    compiled bytecode and therefore inside the packaged exe. A guard that reads
+    only the executable statements would pass while the shipped binary still
+    carried the flagged phrase in a docstring."""
     src = read(path)
-    src = re.sub(r'"""(?:.|\n)*?"""', "", src)          # docstrings
-    src = re.sub(r"'''(?:.|\n)*?'''", "", src)
     src = re.sub(r"#.*", "", src)                        # line comments
     return src
 
@@ -58,14 +59,17 @@ def test_spec() -> None:
     spec = ROOT / "tools" / "flashphysician.spec"
     check("spec exists", spec.exists())
 
-    text = code_only(spec)
+    text = read(spec)
+    # Check the actual keyword argument, not prose about it: the spec's
+    # docstring legitimately explains why UPX is off, and that explanation
+    # mentions the string `upx=True`.
     check("UPX disabled (no packer heuristic)",
-          not re.search(r"upx\s*=\s*True", text),
+          not re.search(r"^\s*upx\s*=\s*True", text, re.MULTILINE),
           "upx=True is the #1 AV packer trigger")
 
     check("version resource wired into every EXE",
-          text.count("version=VERSION") >= 3,
-          f"found {text.count('version=VERSION')} of 3+")
+          len(re.findall(r"^\s*version\s*=\s*VERSION", text, re.MULTILINE)) >= 3,
+          f"found {len(re.findall(r'^\\s*version\\s*=\\s*VERSION', text, re.MULTILINE))} of 3+")
 
     check("one-file and one-dir GUI builds both present",
           "FlashPhysician-portable" in text and "COLLECT(" in text)
