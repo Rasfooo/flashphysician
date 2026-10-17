@@ -40,3 +40,16 @@ secrets.*
 #  prefer to regenerate them in CI instead)
 # assets/*.png
 # assets/*.ico
+# --- Build output (never commit binaries) --------------------------------
+# The old releases/ directory held 25 MB of committed .exe/.zip. Committing
+# build output means every clone ships a binary nobody can audit, and those
+# exact files were the ones Windows flagged. Binaries belong on the Releases
+# page, produced by CI from a known commit -- not in git history.
+release/
+out/
+dist/
+build/
+*.zip
+*.exe
+*.msi
+!tests/**/*.exe
