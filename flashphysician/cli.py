@@ -184,7 +184,101 @@ def cmd_info(args) -> int:
     return 0
 
 
+def _list_windows(args) -> int:
+    """List drives on Windows via the Windows backend.
+
+    This path used to be missing entirely: `cmd_list` called
+    `discover_drives()`, which reads `/sys/block` and returns an empty list on
+    any non-Linux host. On Windows that meant `list` printed "No drives
+    detected" no matter what was plugged in -- including the RAW drive the
+    user was staring at in Explorer.
+
+    Enumerates physical disks (Get-Disk) rather than volumes (Get-Volume), so
+    a drive with no partition table, no volume, or no drive letter still shows
+    up. That is the whole point of the command.
+    """
+    from .backends.windows import WindowsBackend
+
+    backend = WindowsBackend()
+    rows = backend.discover()
+    if not rows:
+        # Fall back to volumes: Get-Disk can be unavailable under some
+        # constrained policies, but Get-Volume usually still works.
+        vols = backend.volumes()
+        if vols:
+            print(f"\n  {'DEVICE':<16} {'SIZE':>9}  {'FS':<8} "
+                  f"{'LABEL':<14} NOTES")
+            print("  " + "-" * 78)
+            for v in vols:
+                ltr = (v.get("DriveLetter") or "").rstrip(":")
+                name = (ltr + ":") if ltr else "(no letter)"
+                fs = (v.get("FileSystem") or "RAW")
+                note = "" if ltr else "  no drive letter -- assign one first"
+                print(f"  {name:<16} "
+                      f"{human(int(v.get('Size') or 0)):>9}  "
+                      f"{fs[:8]:<8} "
+                      f"{(v.get('FileSystemLabel') or '')[:14]:<14}{note}")
+            print(f"\n  {len(vols)} volume(s) visible.")
+            return 0
+        print("  No drives detected.")
+        print("  (if the drive is in Disk Management but not here, run as "
+              "Administrator)")
+        return 1
+
+    usb = [r for r in rows if (r["bus"] or "") in ("usb", "sd", "mmc")]
+    others = [r for r in rows if r not in usb]
+    show = rows if getattr(args, "all", False) else (usb or rows)
+
+    print(f"\n  {'DEVICE':<16} {'SIZE':>9}  {'BUS':<7} {'FS':<8} "
+          f"{'LABEL':<12} NOTES")
+    print("  " + "-" * 84)
+    for r in show:
+        ltr = (r["letters"][0].rstrip(":") + ":") if r["letters"] else ""
+        name = ltr or f"Disk {r['disk_number']}"
+        bus = r["bus"] or "?"
+        vol = r["volume"] or {}
+        fs = vol.get("FileSystem") or ""
+        label = vol.get("FileSystemLabel") or ""
+        notes = []
+        if not ltr:
+            notes.append("no drive letter")
+        if not fs and not vol:
+            notes.append("no volume -- RAW/unformatted")
+        elif not fs:
+            notes.append("RAW")
+        if (r["partition_style"] or "").upper() == "RAW":
+            notes.append("no partition table")
+        if r["readonly"]:
+            notes.append("READ-ONLY")
+        if r["offline"]:
+            notes.append("OFFLINE")
+        if r not in usb:
+            notes.append("internal?")
+        print(f"  {name:<16} {human(int(r['size'] or 0)):>9}  {bus:<7} "
+              f"{fs[:8]:<8} {label[:12]:<12}"
+              f"{'; '.join(notes)}")
+        if not ltr:
+            print(f"  {'':<16} -> {r['name'][:60]}  "
+                  f"(\\\\.\\PhysicalDrive{r['disk_number']})")
+
+    hidden = len(others) if not getattr(args, "all", False) and usb else 0
+    print(f"\n  {len(usb)} removable device(s).")
+    if hidden:
+        print(f"  {hidden} other disk(s) hidden; use --all to include them.")
+    return 0
+
+
 def cmd_list(args) -> int:
+    # sysfs does not exist off Linux, so the generic path is a guaranteed
+    # empty result on Windows. Dispatch before touching it.
+    if sys.platform == "win32":
+        try:
+            return _list_windows(args)
+        except Exception as exc:      # never crash a listing command
+            print(f"  error: could not enumerate drives: {exc}",
+                  file=sys.stderr)
+            return 2
+
     drives = [d for d in discover_drives(include_system=args.all)
               if not d.is_loop]
     if not drives:

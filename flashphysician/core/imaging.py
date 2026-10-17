@@ -36,6 +36,12 @@ class DriveInfo:
     mountpoint: str = ""
     is_loop: bool = False
     sysfs_path: str = ""
+    # Set when the device is present but carries no usable volume: a RAW or
+    # unformatted drive, or one Windows declined to give a letter to. The
+    # drive must still be listed -- that is precisely the drive the user is
+    # trying to rescue -- so the flag drives the "RAW" tag rather than
+    # excluding the row.
+    no_volume: bool = False
 
     @property
     def is_flash(self) -> bool:

@@ -15,6 +15,7 @@ from __future__ import annotations
 import json
 import os
 import queue
+import sys
 import threading
 import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
@@ -258,19 +259,31 @@ class App(tk.Tk):
 
     # -- actions ---------------------------------------------------------
     def refresh_drives(self) -> None:
+        """Populate the drive picker.
+
+        Windows needs its own path: `discover_drives()` reads /sys/block and
+        returns nothing off Linux, so the GUI's drive list was always empty on
+        Windows -- the machine this tool is mostly used on. The Windows
+        backend enumerates physical disks instead, which keeps a RAW or
+        letterless drive visible.
+        """
         try:
-            all_drives = discover_drives(include_system=True)
+            if sys.platform == "win32":
+                self.drives = self._refresh_drives_windows()
+            else:
+                all_drives = discover_drives(include_system=True)
+                flash = [d for d in all_drives if d.is_flash and not d.is_loop]
+                others = [d for d in all_drives
+                          if d not in flash and not d.is_loop and d.size_bytes]
+                self.drives = flash + others
         except Exception as exc:
             self.status.set(f"could not enumerate drives: {exc}")
             return
-        flash = [d for d in all_drives if d.is_flash and not d.is_loop]
-        others = [d for d in all_drives
-                  if d not in flash and not d.is_loop and d.size_bytes]
-        self.drives = flash + others
+
         labels = []
         for d in self.drives:
             tags = []
-            if d.is_flash:
+            if getattr(d, "is_flash", False):
                 tags.append("USB/SD")
             else:
                 tags.append("internal")
@@ -278,6 +291,8 @@ class App(tk.Tk):
                 tags.append("READ-ONLY")
             if d.mounted:
                 tags.append("mounted")
+            if getattr(d, "no_volume", False):
+                tags.append("RAW")
             labels.append(f"{d.path}  —  {human(d.size_bytes)}  "
                           f"[{', '.join(tags)}]  {d.fstype or '?'}"
                           + (f"  {d.label}" if d.label else ""))
@@ -285,9 +300,51 @@ class App(tk.Tk):
         if labels and not self.device.get():
             self.combo.current(0)
             self.device.set(labels[0])
-        self.status.set(f"{len(flash)} removable device(s) found. "
+        removable = sum(1 for d in self.drives
+                        if getattr(d, "is_flash", False))
+        self.status.set(f"{removable} removable device(s) found. "
                         + ("Select one and press Analyse."
                            if labels else "No drives detected."))
+
+    def _refresh_drives_windows(self) -> list:
+        """Build DriveInfo rows from the Windows backend's disk enumeration.
+
+        A disk with no volume still gets a row: the picker must show the drive
+        the user is trying to rescue, especially the RAW one that Windows is
+        offering to format. Its path is the physical-drive path, which the
+        engine can open.
+        """
+        from .backends.windows import WindowsBackend
+        from .core.imaging import DriveInfo
+
+        out = []
+        for row in WindowsBackend().discover():
+            letters = [l.rstrip(":") for l in (row.get("letters") or []) if l]
+            vol = row.get("volume") or {}
+            has_volume = bool(vol) or bool(letters)
+            ltr = letters[0] if letters else ""
+            path = (ltr + ":") if ltr else f"\\\\.\\PhysicalDrive{row['disk_number']}"
+            info = DriveInfo(
+                name=path,
+                path=path,
+                size_bytes=int(row.get("size") or 0),
+                removable=(row.get("bus") or "") in ("usb", "sd", "mmc"),
+                bus=row.get("bus") or "usb",
+                vendor="",
+                model=row.get("name") or "",
+                serial=row.get("serial") or "",
+                mounted=[l + ":" for l in letters],
+                readonly=bool(row.get("readonly")),
+                fstype=(vol.get("FileSystem") or "").lower(),
+                label=vol.get("FileSystemLabel") or "",
+                is_loop=False,
+            )
+            info.no_volume = not has_volume
+            out.append(info)
+        # Removable first, then anything else with a real size.
+        removable = [d for d in out if d.is_flash]
+        others = [d for d in out if d not in removable and d.size_bytes]
+        return removable + others
 
     def browse_file(self) -> None:
         p = filedialog.askopenfilename(

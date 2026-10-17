@@ -213,17 +213,45 @@ class WindowsBackend(Backend):
         return device
 
     def volumes(self) -> list[dict]:
+        """Volumes Windows can currently see, with or without a drive letter.
+
+        Two filters used to be wrong here and both caused "the tool does not
+        detect my drive":
+
+        * `DriveType -eq 'Removable'` is not what a flash drive reliably
+          reports. Many cheap sticks and nearly every USB-SATA/IDE bridge or
+          card-reader present their media as `Fixed`. Filtering on Removable
+          threw them away before anything else ran.
+        * A volume with no drive letter was dropped, because the old code
+          built its identity from `DriveLetter` -- which is empty for exactly
+          the drive that needs help (RAW, or a letter Windows refused to
+          assign because it is unformatted).
+
+        Cards/readers are reported by bus instead: `Get-Disk` is the authority
+        on whether something is USB, and `discover()` joins them.
+        """
         res = _ps(
-            "Get-Volume | Where-Object {$_.DriveType -eq 'Removable'} | "
-            "Select-Object DriveLetter,FileSystemLabel,FileSystem,Size,"
-            "SizeRemaining,HealthStatus,OperationalStatus | ConvertTo-Json -Compress")
+            "Get-Volume | Select-Object DriveLetter,FileSystemLabel,"
+            "FileSystem,FileSystemType,DriveType,Size,SizeRemaining,"
+            "HealthStatus,OperationalStatus | ConvertTo-Json -Compress")
         if not res.ok or not res.stdout.strip():
             return []
         try:
             data = json.loads(res.stdout.strip())
-            return data if isinstance(data, list) else [data]
         except json.JSONDecodeError:
             return []
+        vols = data if isinstance(data, list) else [data]
+        # Drop only what we positively know is not user media: the system
+        # volume and anything with no size. Keep everything else, including
+        # letterless volumes and drives that call themselves Fixed.
+        keep = []
+        for v in vols:
+            if not v.get("Size"):
+                continue
+            if (v.get("DriveType") or "").lower() == "cdrom":
+                continue
+            keep.append(v)
+        return keep
 
     def disks(self) -> list[dict]:
         res = _ps(
@@ -333,20 +361,129 @@ class WindowsBackend(Backend):
         return run(argv, timeout=3600)
 
     # -- enumeration ------------------------------------------------------
+    def physical_disks(self) -> list[dict]:
+        """Every physical disk, whether or not it has a usable volume.
+
+        This is the enumeration that actually matters on Windows, and the
+        reason `list` used to come back empty for exactly the drives people
+        plug in when something is wrong:
+
+        * `Get-Volume` only reports *volumes*. A flash drive whose partition
+          table is gone, or whose filesystem is RAW, has no volume at all --
+          Windows offers to format it and `Get-Volume` never sees it. That is
+          the single most common "my drive does not show up in your tool"
+          report.
+        * `Get-Disk` sees the hardware. If the drive is plugged in, the disk
+          is there, and that is the truthful answer to "is it detected?".
+
+        BusType matters too: USB is what we care about, but cheap flash
+        drives and USB-SATA/IDE bridges happily report themselves as SATA or
+        even Fixed. The filter keeps anything that is not obviously internal
+        storage rather than trusting a `Removable` flag.
+        """
+        res = _ps(
+            "Get-Disk | Select-Object Number,FriendlyName,SerialNumber,Size,"
+            "BusType,PartitionStyle,IsReadOnly,IsOffline,OperationalStatus,"
+            "HealthStatus | ConvertTo-Json -Compress", timeout=120)
+        if not res.ok or not res.stdout.strip():
+            return []
+        try:
+            data = json.loads(res.stdout.strip())
+        except json.JSONDecodeError:
+            return []
+        return data if isinstance(data, list) else [data]
+
+    def partitions(self, disk_number: int | None = None) -> list[dict]:
+        """Partitions, optionally for one disk. A RAW or unallocated disk
+        returns an empty list -- that is information, not an error."""
+        sel = ""
+        if disk_number is not None:
+            sel = f" -DiskNumber {int(disk_number)}"
+        res = _ps(
+            "Get-Partition" + sel +
+            " | Select-Object DiskNumber,PartitionNumber,DriveLetter,Size,"
+            "Type,IsReadOnly,IsOffline,Offset | ConvertTo-Json -Compress",
+            timeout=120)
+        if not res.ok or not res.stdout.strip():
+            return []
+        try:
+            data = json.loads(res.stdout.strip())
+        except json.JSONDecodeError:
+            return []
+        return data if isinstance(data, list) else [data]
+
+    def discover(self) -> list[dict]:
+        """Full picture: every physical disk, joined to its volumes.
+
+        Returns one row per physical disk with the volumes attached, which is
+        what the CLI needs to answer both "did you detect my drive?" (disk
+        present) and "what is on it?" (volume/RAW/letterless).
+        """
+        vols = self.volumes()
+        by_letter = {}
+        for v in vols:
+            ltr = (v.get("DriveLetter") or "").rstrip(":")
+            if ltr:
+                by_letter[ltr] = v
+
+        parts = self.partitions()
+        parts_by_disk: dict[int, list[dict]] = {}
+        for p in parts:
+            parts_by_disk.setdefault(int(p.get("DiskNumber") or 0), []).append(p)
+
+        rows: list[dict] = []
+        for d in self.physical_disks():
+            num = int(d.get("Number") or 0)
+            bus = (d.get("BusType") or "").lower()
+            disks_parts = parts_by_disk.get(num, [])
+            letters = [p.get("DriveLetter") for p in disks_parts
+                       if p.get("DriveLetter")]
+            volume = None
+            for ltr in letters:
+                if ltr and ltr.rstrip(":") in by_letter:
+                    volume = by_letter[ltr.rstrip(":")]
+                    break
+            rows.append({
+                "disk_number": num,
+                "bus": bus,
+                "name": d.get("FriendlyName") or "",
+                "serial": d.get("SerialNumber") or "",
+                "size": d.get("Size") or 0,
+                "partition_style": d.get("PartitionStyle") or "RAW",
+                "readonly": bool(d.get("IsReadOnly")),
+                "offline": bool(d.get("IsOffline")),
+                "status": d.get("OperationalStatus") or "",
+                "health": d.get("HealthStatus") or "",
+                "letters": letters,
+                "partitions": disks_parts,
+                "volume": volume,
+            })
+        return rows
+
     def list_devices(self) -> list[dict]:
         out: list[dict] = []
-        for v in self.volumes():
+        for row in self.discover():
+            ltr = (row["letters"][0].rstrip(":") if row["letters"] else "")
+            vol = row["volume"] or {}
             out.append({
-                "name": (v.get("DriveLetter") or "") + ":",
-                "path": (v.get("DriveLetter") or "") + ":",
-                "size": v.get("Size") or 0,
-                "bus": "usb", "removable": True,
-                "vendor": "", "model": v.get("FileSystemLabel") or "",
-                "serial": "", "mounted": [],
-                "partitions": [],
-                "fstype": (v.get("FileSystem") or "").lower(),
-                "label": v.get("FileSystemLabel") or "",
-                "health": v.get("HealthStatus") or "",
+                "name": (ltr + ":") if ltr else f"PhysicalDrive{row['disk_number']}",
+                "path": (ltr + ":") if ltr else f"\\\\.\\PhysicalDrive{row['disk_number']}",
+                "size": row["size"],
+                "bus": row["bus"] or "usb",
+                "removable": row["bus"] == "usb",
+                "vendor": "",
+                "model": row["name"],
+                "serial": row["serial"],
+                "mounted": [ltr + ":"] if ltr else [],
+                "partitions": [str(p.get("PartitionNumber"))
+                               for p in row["partitions"]],
+                "fstype": (vol.get("FileSystem") or "").lower(),
+                "label": vol.get("FileSystemLabel") or "",
+                "health": row["health"],
+                "disk_number": row["disk_number"],
+                "partition_style": row["partition_style"],
+                "readonly": row["readonly"],
+                "offline": row["offline"],
             })
         return out
 

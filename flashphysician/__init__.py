@@ -12,7 +12,7 @@ Quick start from Python:
     print(format_report(report))
 """
 
-__version__ = "1.0.1"
+__version__ = "1.0.2"
 __author__ = "Rasfooo"
 __license__ = "MIT"
 __url__ = "https://github.com/Rasfooo/flashphysician"

@@ -4,6 +4,43 @@ All notable changes to FlashPhysician are recorded here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follow
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.2] - 2026-10-17
+
+### Fixed
+
+**Windows never detected any drive.** `list` in the GUI and the CLI both
+returned "No drives detected" on Windows no matter what was plugged in, which
+made the rest of the tool unreachable. Two independent causes:
+
+- `cmd_list` and `gui.refresh_drives` both called `discover_drives()`, which
+  reads `/sys/block`. That path does not exist off Linux, so the call returned
+  an empty list on every Windows machine. Both now dispatch on `sys.platform`
+  and use the Windows backend.
+- The Windows backend enumerated `Get-Volume | Where DriveType -eq 'Removable'`.
+  That misses exactly the drives this tool exists for:
+  - a drive with no partition table, or a RAW filesystem, has **no volume at
+    all** -- it is the drive Windows is offering to format, and `Get-Volume`
+    never sees it;
+  - `DriveType` is not `Removable` on many cheap sticks, most USB-SATA/IDE
+    bridges and card readers -- they report `Fixed`, and were discarded;
+  - a volume with no drive letter was dropped, because identity was built from
+    `DriveLetter` -- empty for the drive that most needs help.
+
+  Enumeration is now driven by `Get-Disk` (the hardware), joined to
+  `Get-Volume` and `Get-Partition` for the detail. If the drive is physically
+  plugged in, it is listed.
+
+### Added
+
+- `discover()`, `physical_disks()` and `partitions()` on the Windows backend.
+- Drives with no volume now print with an explicit note (`no drive letter`,
+  `no volume -- RAW/unformatted`, `no partition table`) and, in the CLI, their
+  openable `\\.\PhysicalDriveN` path, so the drive can still be diagnosed.
+- GUI drive picker tags such drives `RAW` instead of hiding them.
+- `tests/test_windows_discovery.py` (18 checks) covering the RAW, Fixed,
+  letterless and multi-drive cases, plus guards that both entry points
+  dispatch on platform.
+
 ## [1.0.1] - 2026-10-17
 
 ### Fixed

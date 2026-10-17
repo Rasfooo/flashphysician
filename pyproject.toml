@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "flashphysician"
-version = "1.0.1"
+version = "1.0.2"
 description = "Diagnose, repair and recover USB flash drives, SD cards and memory cards"
 readme = "README.md"
 requires-python = ">=3.9"
