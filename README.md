@@ -10,7 +10,7 @@ Backs up every sector it overwrites.
 ![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux-4ea1ff?style=flat-square)
 ![Python](https://img.shields.io/badge/python-3.9%2B-3fb950?style=flat-square)
 ![No dependencies](https://img.shields.io/badge/dependencies-none-3fb950?style=flat-square)
-![Tests](https://img.shields.io/badge/tests-74%20passing-3fb950?style=flat-square)
+![Tests](https://img.shields.io/badge/tests-219%20passing-3fb950?style=flat-square)
 ![License](https://img.shields.io/badge/license-MIT-d29922?style=flat-square)
 
 </div>
@@ -52,9 +52,39 @@ Download `FlashPhysician-portable-win64.exe` from
 no runtime, no installer. It is a single file you can keep on the very drive
 you are rescuing.
 
-> Windows will show a SmartScreen warning for any newly published unsigned
-> executable. Choose **More info → Run anyway**, or build it yourself from
-> source (see below) if you would rather not trust a download.
+> **Windows will warn you.** These binaries are unsigned, so the first run shows
+> *"Windows protected your PC"* (SmartScreen). That is a **reputation warning,
+> not a virus detection** — Windows says it about every new executable from a
+> publisher it has not seen before. It is not a Defender quarantine; if Defender
+> actually quarantines the file, please open an issue with the
+> `SHA256SUMS.txt` hash so it can be reported as a false positive.
+>
+> To run it: **More info → Run anyway**. To check it first, verify the hash:
+>
+> ```powershell
+> Get-FileHash .\FlashPhysician-portable-win64.exe -Algorithm SHA256
+> # compare against SHA256SUMS.txt in the same release
+> ```
+>
+> You can also build it yourself from source (see
+> [Building the Windows .exe](#building-the-windows-exe)) if you would rather
+> not trust a download. The build is reproducible from a GitHub runner.
+
+### About the false positives
+
+Earlier releases were reported as "virus" by Windows. The cause was packaging,
+not behaviour, and it is fixed:
+
+| What triggered it | What changed |
+|---|---|
+| UPX-compressed sections — the classic packed-malware shape | UPX is off for every build |
+| No version resource, so no publisher, product or copyright | `tools/version_info.txt` is stamped into each exe |
+| `-ExecutionPolicy Bypass` embedded in the binary | Uses `RemoteSigned`; only `-Command` literals are ever passed |
+| `cmd /c echo. > file` used to flush a volume | Uses `Write-VolumeCache`; no shell, no temp file |
+| Builds made ad hoc on a local machine | Built on `windows-latest` CI with published SHA-256 sums |
+
+`tests/test_packaging.py` (145 checks) asserts all of this, so the next release
+cannot silently regress.
 
 ### Linux
 
@@ -246,8 +276,12 @@ destroying the thing it is trying to save.
 ## Building the Windows .exe
 
 The release executables are built on Windows by
-[`.github/workflows/build-exe.yml`](.github/workflows/build-exe.yml), so the
-artefact is a genuine Windows build rather than a cross-compiled guess:
+[`.github/workflows/build.yml`](.github/workflows/build.yml), so the artefact is
+a genuine Windows build rather than a cross-compiled guess. Push a `v*` tag (or
+run the workflow manually) and the runner builds, tests, hashes and uploads the
+binaries.
+
+To build locally on Windows:
 
 ```bat
 pip install pyinstaller
@@ -256,8 +290,28 @@ python tools\make_ico.py
 pyinstaller tools\flashphysician.spec --noconfirm
 ```
 
-Output: `dist/FlashPhysician/` (windowed), `dist/FlashPhysician-portable.exe` (single
-file), `dist/flashphysician-cli/` (console build for scripting).
+Output: `dist/FlashPhysician/` (windowed one-dir), `dist/FlashPhysician-portable.exe`
+(single-file GUI), `dist/flashphysician-cli.exe` (console build for scripting).
+
+**Do not turn UPX back on.** `upx=True` shrinks the binary a little and gets it
+quarantined by generic packer heuristics. `tests/test_packaging.py` fails the
+build if it reappears.
+
+### If a vendor still flags the release
+
+The exe is unsigned, so some engines will score it badly on reputation alone.
+The workflow publishes `SHA256SUMS.txt` for exactly this case — submit the file
+hash, not just the name:
+
+- Microsoft: <https://www.microsoft.com/en-us/wdsi/filesubmission>
+  ("I believe this file is incorrectly detected")
+- VirusTotal: re-scan the exact published hash and see which engines fire
+- Multi-vendor: most AV vendors accept false-positive reports by email with the
+  SHA-256 attached
+
+The only complete fix for the SmartScreen warning is a code-signing certificate
+(OV or EV); it removes the warning entirely but costs money every year. That is
+a deliberate product decision, not a bug.
 
 ---
 
@@ -270,12 +324,13 @@ python3 tests/test_surface.py    # surface + capacity        7 tests
 python3 tests/test_recovery.py   # file recovery            10 tests
 python3 tests/test_cli.py        # CLI contract             15 tests
 python3 tests/test_gui.py        # GUI (headless)            9 tests
+python3 tests/test_packaging.py  # AV hygiene              145 checks
 python3 tests/run_all.py         # everything
 ```
 
-**74 tests, all passing.** They are plain scripts with no test framework
-required, because a rescue tool has to be verifiable on a machine where you
-cannot install anything.
+**219 checks, all passing** (74 behaviour tests + 145 packaging guards). They
+are plain scripts with no test framework required, because a rescue tool has to
+be verifiable on a machine where you cannot install anything.
 
 The tests are not smoke tests. They build byte-exact images of each failure mode
 and assert on the diagnostic code *and* the health verdict — and the repair

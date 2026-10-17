@@ -25,9 +25,10 @@ SUITES = [
     ("test_recovery", "file recovery and signature carving"),
     ("test_cli", "CLI contract, exit codes, refusal behaviour"),
     ("test_gui", "GUI logic (headless)"),
+    ("test_packaging", "packaging hygiene (no AV triggers, version info)"),
 ]
 
-TALLY = re.compile(r"^\s+(\d+)/(\d+) passed\s*$", re.MULTILINE)
+TALLY = re.compile(r"^\s+(\d+)/(\d+) (?:tests |guard checks )?passed\s*$", re.MULTILINE)
 
 
 def main() -> int:

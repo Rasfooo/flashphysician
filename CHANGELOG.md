@@ -4,6 +4,51 @@ All notable changes to FlashPhysician are recorded here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follow
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.1] - 2026-10-17
+
+### Fixed
+
+**Windows builds were reported as malware.** The engine was never the problem --
+the packaging was. Users saw "Windows Defender says this file is a virus" and
+some files were quarantined outright, for a tool that only reads and repairs
+USB drives.
+
+- **UPX is disabled for every build.** `upx=True` compressed the PE sections,
+  and a compressed PE with an appended high-entropy archive is exactly the
+  shape of a packed malware stub. The size saving was not worth it.
+- **Version resource added** (`tools/version_info.txt`). An unsigned exe with
+  no publisher, product or copyright has no reputation to build on, which is
+  why SmartScreen called it "unrecognised app" and some scanners scored it as
+  generic. Every Windows binary is now stamped with CompanyName, ProductName,
+  FileDescription and LegalCopyright.
+- **`-ExecutionPolicy Bypass` is gone** from the Windows backend; it uses
+  `RemoteSigned`. The permissive policy string is the single most common
+  marker in malware launchers, and its presence in an unsigned PyInstaller
+  binary is enough to land on a block list.
+- **The `cmd /c echo. > file` volume flush is gone**, replaced by
+  `Write-VolumeCache`. A packaged Python exe that spawns `cmd.exe` with an
+  output redirect looks like a dropper to a static scanner, and the old code
+  achieved nothing -- it wrote a file and deleted it again.
+
+### Added
+
+- **Packaging guard suite** (`tests/test_packaging.py`, 145 checks) asserting
+  that no AV-trigger pattern can silently return: UPX off, version resource
+  wired into every EXE, no policy-bypass or shell-redirect literals, README
+  accurate about the unsigned warning, workflow enforcing the same rules.
+- **`windows-latest` build workflow** (`.github/workflows/build.yml`) that
+  tests, builds, stamps, hashes and uploads the artefacts, and fails the build
+  if a guard regresses. Releases now carry `SHA256SUMS.txt`.
+- README section explaining the SmartScreen warning, how to verify a download
+  by hash, and where to report a vendor false positive.
+
+### Notes
+
+The binaries remain **unsigned**. SmartScreen will still show "Windows
+protected your PC" on first run for a newly published publisher; that is a
+reputation warning, not a detection. Removing it entirely requires a
+code-signing certificate.
+
 ## [1.0.0] - 2026-10-16
 
 First release.

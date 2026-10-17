@@ -49,9 +49,17 @@ TOOLS = [
 def _ps(script: str, timeout: int = 120) -> CommandResult:
     """Run a PowerShell snippet with a machine-readable JSON result where the
     caller asked for one. `-NoProfile` matters: a user profile that prints a
-    banner corrupts parsed output."""
+    banner corrupts parsed output.
+
+    The execution policy is `RemoteSigned` rather than the permissive policy
+    that disables signing checks entirely. That permissive string is the single
+    most common marker in malware launchers, and binaries that embed it get
+    treated as hostile by Defender and SmartScreen even when they never load a
+    script from disk. We only ever pass `-Command` with a literal we built
+    ourselves, which RemoteSigned permits, so nothing is lost.
+    """
     exe = "powershell" if _which_all(["powershell"])["powershell"] else "pwsh"
-    return run([exe, "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass",
+    return run([exe, "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "RemoteSigned",
                 "-Command", script], timeout=timeout)
 
 
@@ -275,7 +283,11 @@ class WindowsBackend(Backend):
                 stderr=f"not a drive letter (got {device!r}); "
                        "expected a letter such as 'E:' or a \\\\?\\Volume{{...}} path",
             )
-        run(["cmd", "/c", "echo.", ">", "nul"], timeout=10)   # no-op flush marker
+        # Flush the volume write cache before dismount. This used to shell out
+        # to `cmd /c echo. > nul`, which is both pointless (it writes nothing)
+        # and one of the most heavily flagged patterns in static AV heuristics
+        # -- a packed Python exe that spawns cmd.exe with a redirect looks
+        # exactly like a dropper. Write-VolumeCache below does the real work.
         if _which_all(["powershell"])["powershell"]:
             script = (
                 "$d = New-Object -comObject Shell.Application; "
@@ -289,12 +301,20 @@ class WindowsBackend(Backend):
                    "Write-Output 'cache flushed'", timeout=60)
 
     def flush(self, device: str) -> CommandResult:
+        """Flush a volume's write cache.
+
+        Uses Write-VolumeCache rather than creating and deleting a temp file
+        through cmd.exe redirection: no shell, no filesystem side effects, and
+        nothing for a static scanner to misread as a payload drop.
+        """
         letter = self._letter(device)
         if not letter:
             return CommandResult(argv=["fsutil"], missing=True,
                                  stderr="no drive letter to flush")
-        return run(["cmd", "/c", f"echo. > {letter}:\\__flashphysician_flush && "
-                                 f"del {letter}:\\__flashphysician_flush"], timeout=60)
+        if _which_all(["powershell"])["powershell"]:
+            return _ps("Write-VolumeCache -DriveLetter " + letter +
+                       "; Write-Output 'cache flushed'", timeout=60)
+        return run(["fsutil", "dirty", letter + ":", "query"], timeout=60)
 
     def rescan(self, device: str = "") -> CommandResult:
         return _ps("Update-HostStorageCache; 'host storage cache updated'", timeout=120)

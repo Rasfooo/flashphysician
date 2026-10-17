@@ -1,0 +1,40 @@
+# UTF-8
+#
+# PyInstaller version resource for the Windows executables.
+#
+# Why this file exists: an unsigned .exe with no version metadata has nothing
+# for Windows to build a reputation on, so SmartScreen falls back to "unknown
+# publisher" and Defender's static pass has no vendor context to weigh. Filling
+# in CompanyName / ProductName / FileDescription / LegalCopyright is free and
+# measurably reduces both false positives and SmartScreen friction.
+#
+# Every string here must exist in the real project -- inventing a company or a
+# trademark that does not belong to you is worse than shipping no metadata.
+
+VSVersionInfo(
+  ffi=FixedFileInfo(
+    filevers=(1, 0, 1, 0),
+    prodvers=(1, 0, 1, 0),
+    mask=0x3f,
+    flags=0x0,
+    OS=0x40004,
+    fileType=0x1,
+    subtype=0x0,
+    date=(0, 0)
+  ),
+  kids=[
+    StringFileInfo([
+      StringTable(
+        '040904B0',
+        [StringStruct('CompanyName', 'FlashPhysician'),
+         StringStruct('FileDescription', 'FlashPhysician - USB/SD card diagnose and repair tool'),
+         StringStruct('FileVersion', '1.0.1.0'),
+         StringStruct('InternalName', 'FlashPhysician'),
+         StringStruct('LegalCopyright', 'Copyright (c) 2026 Rasfooo. MIT License.'),
+         StringStruct('OriginalFilename', 'FlashPhysician.exe'),
+         StringStruct('ProductName', 'FlashPhysician'),
+         StringStruct('ProductVersion', '1.0.1.0')])
+    ]),
+    VarFileInfo([VarStruct('Translation', [1033, 1200])])
+  ]
+)
